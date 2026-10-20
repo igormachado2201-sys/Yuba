@@ -41,7 +41,7 @@ textarea{width:100%;min-height:84px;resize:vertical}
 .gr input{width:100%;padding:8px 4px;font-size:.9rem}
 .er{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;max-width:620px;break-inside:avoid}
 .er .n{grid-column:1/3}
-.er input[type=text]{width:100%}
+.er input[type=text],.er select{width:100%}
 .sf{display:flex;align-items:center;gap:8px;font-weight:600}
 .del{border:none;background:none;color:var(--muted);font-size:1.4rem;padding:0 6px;justify-self:end}
 .att{max-width:340px}
@@ -76,15 +76,17 @@ var FR='<div class="frame">Sem foto</div><button type="button" class="img">Image
 function cardH(h){return '<div class="card"><label class="chk"><input type="checkbox"><span class="lab">'+h+'</span></label><textarea placeholder="Digite os nomes (um por linha)"></textarea>'+FR+'</div>';}
 var T={
  card:'<div class="card"><label class="chk"><input type="checkbox"><input type="text" class="labin" placeholder="Rótulo"></label><textarea placeholder="Digite o texto"></textarea>'+FR+'</div>',
- er:'<div class="er"><input type="text" class="n" placeholder="Nome"><input type="text" placeholder="Rank"><input type="text" placeholder="Tempo offline"><label class="sf"><input type="checkbox">Subida de Farda</label><button type="button" class="del" aria-label="Remover">×</button></div>',
+ er:'<div class="er"><input type="text" class="n" placeholder="Nome"><input type="text" placeholder="Rank"><select aria-label="Inatividade"><option value="">Inatividade</option><option>2 dias</option><option>3 dias</option><option>5 dias</option></select><label class="sf"><input type="checkbox">Subida de Farda</label><button type="button" class="del" aria-label="Remover">×</button></div>',
  gr:'<div class="gr"><input type="text" placeholder="Nome"><input type="time" aria-label="Horário início"><input type="time" aria-label="Horário fim"><button type="button" class="del" aria-label="Remover linha">×</button></div>',
  att:'<div class="card att">'+FR+'<button type="button" class="del" aria-label="Remover foto">×</button></div>'
 };
-function add(p,k){var b=p.querySelector('[data-box="'+k+'"]'),d=document.createElement("div");d.innerHTML=T[k];b.appendChild(d.firstChild);}
+function add(p,k){var b=p.querySelector('[data-box="'+k+'"]'),d=document.createElement("div");
+  if(k==="hr"){var c=b.children.length;if(c>=HORAS.length)return;d.innerHTML=cardH(HORAS[c]);if(c+1>=HORAS.length)p.querySelector('[data-a="hr"]').style.display="none";}else d.innerHTML=T[k];
+  b.appendChild(d.firstChild);}
 var BODY={
  ef:'<div class="erows" data-box="er"></div><button type="button" class="add" data-a="er">+ Adicionar pessoa</button>',
- ar:'<div class="grid">'+HORAS.map(cardH).join("")+'</div>',
- gu:'<div class="gbox"><label class="gf">Portão:<select><option value="">Selecione</option><option>Norte</option><option>Sul</option></select></label><label class="gf">Setor:<input type="text" placeholder="Nome do setor"></label></div><div class="gh"><span>Nome</span><span>Início</span><span>Fim</span><span></span></div><div class="grows" data-box="gr"></div><button type="button" class="add" data-a="gr">+ Adicionar linha</button>',
+ ar:'<div class="grid" data-box="hr"></div><button type="button" class="add" data-a="hr">+ Adicionar horário</button>',
+ gu:'<div class="gbox"><label class="gf">Portão:<select><option value="">Selecione</option><option>Norte</option><option>Sul</option></select></label><label class="gf">Setor:<input type="text" placeholder="Nome do setor"></label></div><div class="gh"><span>Nome</span><span>Início</span><span>Fim</span><span></span></div><div class="grows" data-box="gr"></div><button type="button" class="add" data-a="gr">+ Adicionar linha</button><div class="grid" style="margin-top:16px"><div class="card"><strong>Começo</strong>'+FR+'</div><div class="card"><strong>Fim</strong>'+FR+'</div></div>',
  re:'<label class="gf" style="max-width:360px;margin-bottom:12px">Tipo:<select><option value="">Selecione</option><option>Treinamento</option><option>Patrulha</option><option>PvP</option><option>QRU</option></select></label><textarea style="min-height:140px" placeholder="Escreva o relatório"></textarea><div class="grid" style="margin-top:12px" data-box="att"></div><button type="button" class="add" data-a="att">+ Adicionar foto</button>',
  cu:'<div class="grid" data-box="card"></div><button type="button" class="add" data-a="card">Adicionar espaço</button>'
 };
@@ -134,9 +136,9 @@ document.getElementById("rel").onclick=function(){
   try{window.print();}catch(e){document.getElementById("msg").textContent="Não foi possível abrir a impressão. Tente de novo no navegador.";}
   document.title=old;
 };
-mk("Efetivos",BODY.ef,{init:["er","er","er"]});
-mk("Arsenal",BODY.ar);
-mk("Guarnição de Portão",BODY.gu,{init:["gr","gr","gr"]});
+mk("Efetivos",BODY.ef,{init:["er"]});
+mk("Arsenal",BODY.ar,{init:["hr"]});
+mk("Guarnição de Portão",BODY.gu,{init:["gr"]});
 mk("Relatórios",BODY.re,{init:["att"]});
 show("p1");
 </script>
