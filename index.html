@@ -85,7 +85,7 @@ function add(p,k){var b=p.querySelector('[data-box="'+k+'"]'),d=document.createE
   b.appendChild(d.firstChild);}
 var BODY={
  ef:'<div class="erows" data-box="er"></div><button type="button" class="add" data-a="er">+ Adicionar pessoa</button>',
- ar:'<div class="grid" data-box="hr"></div><button type="button" class="add" data-a="hr">+ Adicionar horário</button>',
+ ar:'<div class="grid">'+HORAS.map(cardH).join("")+'</div>',
  gu:'<div class="gbox"><label class="gf">Portão:<select><option value="">Selecione</option><option>Norte</option><option>Sul</option></select></label><label class="gf">Setor:<input type="text" placeholder="Nome do setor"></label></div><div class="gh"><span>Nome</span><span>Início</span><span>Fim</span><span></span></div><div class="grows" data-box="gr"></div><button type="button" class="add" data-a="gr">+ Adicionar linha</button><div class="grid" style="margin-top:16px"><div class="card"><strong>Começo</strong>'+FR+'</div><div class="card"><strong>Fim</strong>'+FR+'</div></div>',
  re:'<label class="gf" style="max-width:360px;margin-bottom:12px">Tipo:<select><option value="">Selecione</option><option>Treinamento</option><option>Patrulha</option><option>PvP</option><option>QRU</option></select></label><textarea style="min-height:140px" placeholder="Escreva o relatório"></textarea><div class="grid" style="margin-top:12px" data-box="att"></div><button type="button" class="add" data-a="att">+ Adicionar foto</button>',
  cu:'<div class="grid" data-box="card"></div><button type="button" class="add" data-a="card">Adicionar espaço</button>'
@@ -137,7 +137,7 @@ document.getElementById("rel").onclick=function(){
   document.title=old;
 };
 mk("Efetivos",BODY.ef,{init:["er"]});
-mk("Arsenal",BODY.ar,{init:["hr"]});
+mk("Arsenal",BODY.ar);
 mk("Guarnição de Portão",BODY.gu,{init:["gr"]});
 mk("Relatórios",BODY.re,{init:["att"]});
 show("p1");
