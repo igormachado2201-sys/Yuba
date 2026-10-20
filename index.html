@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Exército de Yuba</title>
+<style>
+:root{--bg:#f4f5f2;--surface:#fff;--ink:#1d2320;--muted:#66706a;--line:#d5d9d3;--accent:#2f5d50;--accent-ink:#fff;--frame:#eceee9;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#151a18;--surface:#1e2522;--ink:#e8ece9;--muted:#98a39c;--line:#35403a;--accent:#7fc0a9;--accent-ink:#0f1a15;--frame:#262e2a}}
+:root[data-theme="dark"]{--bg:#151a18;--surface:#1e2522;--ink:#e8ece9;--muted:#98a39c;--line:#35403a;--accent:#7fc0a9;--accent-ink:#0f1a15;--frame:#262e2a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px;flex-wrap:wrap}
+h1{font-size:1.3rem;margin:0}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 12px}
+button.primary,nav button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+nav{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto}
+nav button{white-space:nowrap}
+main{padding:0 16px 24px}
+.panel{display:none}.panel.active{display:block}
+.ptitle{margin:0 0 12px;width:100%;max-width:360px;background:none;border:none;border-bottom:1px solid var(--line);color:var(--ink);padding:4px 0;font-family:inherit;font-size:1.1rem;font-weight:600}
+input[type=text],input[type=time],textarea,select{min-width:0;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{width:100%;min-height:84px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;break-inside:avoid}
+.chk{display:flex;align-items:center;gap:10px;font-weight:600}
+.chk input[type=checkbox],.sf input{width:24px;height:24px;accent-color:var(--accent)}
+.chk .lab{font-size:1.1rem}
+.labin{width:100px}
+.frame{width:100%;height:170px;background:var(--frame);border:1px dashed var(--line);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.85rem}
+.frame img{width:100%;height:100%;object-fit:cover}
+.add{margin-top:12px}
+.msg,.smsg{color:var(--muted);font-size:.9rem}
+.gbox{display:grid;gap:10px;margin-bottom:14px;max-width:520px}
+.gf{display:flex;align-items:center;gap:10px;font-weight:600}
+.gf select,.gf input{flex:1}
+.gh,.gr{display:grid;grid-template-columns:1fr 78px 78px 28px;gap:8px;align-items:center;max-width:620px}
+.gh{font-weight:600;color:var(--muted);font-size:.85rem;margin-bottom:6px}
+.grows,.erows{display:flex;flex-direction:column;gap:8px}
+.gr input{width:100%;padding:8px 4px;font-size:.9rem}
+.er{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;max-width:620px;break-inside:avoid}
+.er .n{grid-column:1/3}
+.er input[type=text]{width:100%}
+.sf{display:flex;align-items:center;gap:8px;font-weight:600}
+.del{border:none;background:none;color:var(--muted);font-size:1.4rem;padding:0 6px;justify-self:end}
+.att{max-width:340px}
+@media print{
+ @page{size:A4 portrait;margin:12mm}
+ body{background:#fff;color:#000}
+ header,nav,.add,.img,.msg,.del{display:none!important}
+ main{padding:0}
+ .ptitle{border:none;font-size:1.3rem;font-weight:700;color:#000}
+ .grid{grid-template-columns:1fr 1fr;gap:8mm}
+ .card,.er{border-color:#999;padding:3mm;gap:2mm}
+ textarea{resize:none;min-height:18mm;overflow:visible}
+ input[type=text],input[type=time],textarea,select{border:none;border-bottom:1px solid #999;border-radius:0;background:none;color:#000;-webkit-appearance:none;appearance:none;padding:2px}
+ input:disabled,textarea:disabled,select:disabled{opacity:1;color:#000;-webkit-text-fill-color:#000}
+ .frame{height:55mm;border-color:#999}
+ .gh,.gr{grid-template-columns:1fr 30mm 30mm;max-width:none}
+ .gh span:last-child{display:none}
+}
+</style>
+</head>
+<body>
+<header><h1>Exército de Yuba</h1><button class="primary" id="rel">Gerar Relatorio</button></header>
+<nav id="tabs"></nav>
+<main id="panels">
+</main>
+<p class="msg" style="padding:0 16px" id="msg"></p>
+<input type="file" id="file" accept="image/jpeg,image/png,image/webp,image/heic" hidden>
+<script>
+var HORAS=["11h","13h","15h","17h","19h"],tabsEl=document.getElementById("tabs"),panels=document.getElementById("panels"),file=document.getElementById("file"),target=null,n=0;
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+var FR='<div class="frame">Sem foto</div><button type="button" class="img">Imagem</button>';
+function cardH(h){return '<div class="card"><label class="chk"><input type="checkbox"><span class="lab">'+h+'</span></label><textarea placeholder="Digite os nomes (um por linha)"></textarea>'+FR+'</div>';}
+var T={
+ card:'<div class="card"><label class="chk"><input type="checkbox"><input type="text" class="labin" placeholder="Rótulo"></label><textarea placeholder="Digite o texto"></textarea>'+FR+'</div>',
+ er:'<div class="er"><input type="text" class="n" placeholder="Nome"><input type="text" placeholder="Rank"><input type="text" placeholder="Tempo offline"><label class="sf"><input type="checkbox">Subida de Farda</label><button type="button" class="del" aria-label="Remover">×</button></div>',
+ gr:'<div class="gr"><input type="text" placeholder="Nome"><input type="time" aria-label="Horário início"><input type="time" aria-label="Horário fim"><button type="button" class="del" aria-label="Remover linha">×</button></div>',
+ att:'<div class="card att">'+FR+'<button type="button" class="del" aria-label="Remover foto">×</button></div>'
+};
+function add(p,k){var b=p.querySelector('[data-box="'+k+'"]'),d=document.createElement("div");d.innerHTML=T[k];b.appendChild(d.firstChild);}
+var BODY={
+ ef:'<div class="erows" data-box="er"></div><button type="button" class="add" data-a="er">+ Adicionar pessoa</button>',
+ ar:'<div class="grid">'+HORAS.map(cardH).join("")+'</div>',
+ gu:'<div class="gbox"><label class="gf">Portão:<select><option value="">Selecione</option><option>Norte</option><option>Sul</option></select></label><label class="gf">Setor:<input type="text" placeholder="Nome do setor"></label></div><div class="gh"><span>Nome</span><span>Início</span><span>Fim</span><span></span></div><div class="grows" data-box="gr"></div><button type="button" class="add" data-a="gr">+ Adicionar linha</button>',
+ re:'<label class="gf" style="max-width:360px;margin-bottom:12px">Tipo:<select><option value="">Selecione</option><option>Treinamento</option><option>Patrulha</option><option>PvP</option><option>QRU</option></select></label><textarea style="min-height:140px" placeholder="Escreva o relatório"></textarea><div class="grid" style="margin-top:12px" data-box="att"></div><button type="button" class="add" data-a="att">+ Adicionar foto</button>',
+ cu:'<div class="grid" data-box="card"></div><button type="button" class="add" data-a="card">Adicionar espaço</button>'
+};
+function mk(name,body,o){o=o||{};
+  var id="p"+(++n),b=document.createElement("button");b.textContent=name;b.dataset.p=id;tabsEl.appendChild(b);
+  var p=document.createElement("section");p.className="panel";p.id=id;
+  p.innerHTML='<input type="text" class="ptitle" value="'+esc(name)+'"'+(o.custom?'':' readonly')+' aria-label="Nome da aba"><div class="body">'+body+'</div>';
+  panels.appendChild(p);
+  o.init&&o.init.forEach(function(k){add(p,k);});
+  return id;
+}
+function show(id){
+  [].forEach.call(panels.children,function(p){p.classList.toggle("active",p.id===id);});
+  [].forEach.call(tabsEl.querySelectorAll("button[data-p]"),function(b){b.classList.toggle("on",b.dataset.p===id);});
+}
+function sync(r){
+  r.querySelectorAll("input").forEach(function(i){if(i.type==="checkbox"){i.checked?i.setAttribute("checked",""):i.removeAttribute("checked");}else i.setAttribute("value",i.value);});
+  r.querySelectorAll("textarea").forEach(function(x){x.textContent=x.value;});
+  r.querySelectorAll("select").forEach(function(s){[].forEach.call(s.options,function(o,k){k===s.selectedIndex?o.setAttribute("selected",""):o.removeAttribute("selected");});});
+}
+tabsEl.addEventListener("click",function(e){if(e.target.dataset.p)show(e.target.dataset.p);});
+panels.addEventListener("click",function(e){
+  var t=e.target.closest("button")||e.target,p=t.closest(".panel");
+  if(t.classList.contains("img")){target=t.parentNode.querySelector(".frame");file.value="";file.click();}
+  else if(t.classList.contains("del")){var r=t.closest(".er,.gr,.att"),par=r.parentNode;if(r.classList.contains("att")||par.children.length>1)r.remove();}
+  else if(t.dataset.a)add(p,t.dataset.a);
+});
+panels.addEventListener("input",function(e){
+  var t=e.target;if(t.classList.contains("ptitle")&&!t.readOnly){var b=tabsEl.querySelector('[data-p="'+t.closest(".panel").id+'"]');if(b)b.textContent=t.value||"Sem nome";}
+});
+file.addEventListener("change",function(){
+  var f=file.files[0],fr=target;if(!f||!fr)return;
+  var r=new FileReader();
+  r.onload=function(){
+    var im=new Image();
+    function put(src){var o=new Image();o.src=src;o.alt="Foto";fr.innerHTML="";fr.appendChild(o);}
+    im.onload=function(){var s=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*s;c.height=im.height*s;c.getContext("2d").drawImage(im,0,0,c.width,c.height);put(c.toDataURL("image/jpeg",.75));};
+    im.onerror=function(){put(r.result);};
+    im.src=r.result;
+  };
+  r.readAsDataURL(f);
+});
+document.getElementById("rel").onclick=function(){
+  var act=panels.querySelector(".panel.active");if(!act)return;
+  sync(act);var old=document.title;document.title=act.querySelector(".ptitle").value||"Relatório";
+  document.getElementById("msg").textContent="Na janela de impressão, escolha “Salvar como PDF”. Será gerado só o PDF da aba aberta.";
+  try{window.print();}catch(e){document.getElementById("msg").textContent="Não foi possível abrir a impressão. Tente de novo no navegador.";}
+  document.title=old;
+};
+mk("Efetivos",BODY.ef,{init:["er","er","er"]});
+mk("Arsenal",BODY.ar);
+mk("Guarnição de Portão",BODY.gu,{init:["gr","gr","gr"]});
+mk("Relatórios",BODY.re,{init:["att"]});
+show("p1");
+</script>
+</body>
+</html>
