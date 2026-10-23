@@ -36,6 +36,17 @@ textarea{width:100%;min-height:84px;resize:vertical}
 .gf{display:flex;align-items:center;gap:10px;font-weight:600}
 .gf select,.gf input{flex:1}
 .idf{max-width:360px;margin-bottom:12px}
+.crumb{margin-bottom:12px;display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.crumb button{padding:4px 8px}
+.flist{display:flex;flex-direction:column;gap:8px;max-width:520px}
+.flist button{text-align:left;padding:12px}
+.flist small{color:var(--muted);display:block}
+#login{display:none;min-height:100vh;align-items:center;justify-content:center;padding:16px}
+body.locked #login{display:flex}
+body.locked header,body.locked nav,body.locked main,body.locked #msg{display:none}
+.lbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+.lbox input{width:100%}
+#who{color:var(--muted);font-size:.9rem;align-self:center}
 .gh,.gr{display:grid;grid-template-columns:1fr 78px 78px 28px;gap:8px;align-items:center;max-width:620px}
 .gh{font-weight:600;color:var(--muted);font-size:.85rem;margin-bottom:6px}
 .grows,.erows{display:flex;flex-direction:column;gap:8px}
@@ -49,7 +60,7 @@ textarea{width:100%;min-height:84px;resize:vertical}
 @media print{
  @page{size:A4 portrait;margin:12mm}
  body{background:#fff;color:#000}
- header,nav,.add,.img,.msg,.del{display:none!important}
+ header,nav,.add,.img,.msg,.del,.crumb{display:none!important}
  main{padding:0}
  .ptitle{border:none;font-size:1.3rem;font-weight:700;color:#000}
  .grid{grid-template-columns:1fr 1fr;gap:8mm}
@@ -63,8 +74,9 @@ textarea{width:100%;min-height:84px;resize:vertical}
 }
 </style>
 </head>
-<body>
-<header><h1>Exército de Yuba</h1><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="drv">Salvar no Drive</button><button class="primary" id="rel">Gerar Relatorio</button></div></header>
+<body class="locked">
+<header><h1>Exército de Yuba</h1><div style="display:flex;gap:8px;flex-wrap:wrap"><span id="who"></span><button id="out">Sair</button><button id="drv">Salvar no Drive</button><button class="primary" id="rel">Gerar Relatorio</button></div></header>
+<div id="login"><div class="lbox"><h1>Exército de Yuba</h1><input type="text" id="lu" placeholder="Login" autocomplete="username" autocapitalize="none"><input type="password" id="lp" placeholder="Senha" autocomplete="current-password" style="padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit"><button class="primary" id="lgo">Entrar</button><span class="msg" id="lm"></span></div></div>
 <nav id="tabs"></nav>
 <main id="panels">
 </main>
@@ -73,6 +85,7 @@ textarea{width:100%;min-height:84px;resize:vertical}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+var CRED=null,arqId,stack=[];
 var DRIVE_URL="https://script.google.com/macros/s/AKfycbzIBcvAjaVe5dfasiO7cj5W1LtjS3v1nlH0TQkSISWkkjkmfxUo1P8soVRop9ItUNQr/exec";
 var HORAS=["11h","13h","15h","17h","19h"],tabsEl=document.getElementById("tabs"),panels=document.getElementById("panels"),file=document.getElementById("file"),target=null,n=0;
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
@@ -98,7 +111,7 @@ var BODY={
 function mk(name,body,o){o=o||{};
   var id="p"+(++n),b=document.createElement("button");b.textContent=name;b.dataset.p=id;tabsEl.appendChild(b);
   var p=document.createElement("section");p.className="panel";p.id=id;
-  p.innerHTML='<input type="text" class="ptitle" value="'+esc(name)+'"'+(o.custom?'':' readonly')+' aria-label="Nome da aba"><label class="gf idf">Identificador:<select class="ident"><option value="">Selecione</option>'+IDS.map(function(x){return "<option>"+x+"</option>";}).join("")+'</select></label><div class="body">'+body+'</div>';
+  p.innerHTML='<input type="text" class="ptitle" value="'+esc(name)+'"'+(o.custom?'':' readonly')+' aria-label="Nome da aba">'+(o.noid?'':'<label class="gf idf">Identificador:<select class="ident"><option value="">Selecione</option>'+IDS.map(function(x){return "<option>"+x+"</option>";}).join("")+'</select></label>')+'<div class="body">'+body+'</div>';
   panels.appendChild(p);
   o.init&&o.init.forEach(function(k){add(p,k);});
   return id;
@@ -106,6 +119,7 @@ function mk(name,body,o){o=o||{};
 function show(id){
   [].forEach.call(panels.children,function(p){p.classList.toggle("active",p.id===id);});
   [].forEach.call(tabsEl.querySelectorAll("button[data-p]"),function(b){b.classList.toggle("on",b.dataset.p===id);});
+  if(id===arqId&&CRED){stack=[];lista("");}
 }
 function sync(r){
   r.querySelectorAll("input").forEach(function(i){if(i.type==="checkbox"){i.checked?i.setAttribute("checked",""):i.removeAttribute("checked");}else i.setAttribute("value",i.value);});
@@ -118,6 +132,10 @@ panels.addEventListener("click",function(e){
   if(t.classList.contains("img")){target=t.parentNode.querySelector(".frame");file.value="";file.click();}
   else if(t.classList.contains("del")){var r=t.closest(".er,.gr,.att"),par=r.parentNode;if(r.classList.contains("att")||par.children.length>1)r.remove();}
   else if(t.dataset.a)add(p,t.dataset.a);
+  else if(t.dataset.r){stack=[];lista("");}
+  else if(t.dataset.i){stack=stack.slice(0,+t.dataset.i+1);lista(stack[stack.length-1].id);}
+  else if(t.dataset.f){stack.push({id:t.dataset.f,nome:t.dataset.n});lista(t.dataset.f);}
+  else if(t.dataset.o)abrir(t.dataset.o);
 });
 panels.addEventListener("input",function(e){
   var t=e.target;if(t.classList.contains("ptitle")&&!t.readOnly){var b=tabsEl.querySelector('[data-p="'+t.closest(".panel").id+'"]');if(b)b.textContent=t.value||"Sem nome";}
@@ -136,6 +154,7 @@ file.addEventListener("change",function(){
 });
 document.getElementById("rel").onclick=function(){
   var act=panels.querySelector(".panel.active");if(!act)return;
+  if(!act.querySelector(".ident")){document.getElementById("msg").textContent="Esta aba não gera documento.";return;}
   sync(act);var old=document.title;var idv=act.querySelector(".ident").value;document.title=(act.querySelector(".ptitle").value||"Relatório")+(idv?" - "+idv:"");
   document.getElementById("msg").textContent="Na janela de impressão, escolha “Salvar como PDF”. Será gerado só o PDF da aba aberta.";
   try{window.print();}catch(e){document.getElementById("msg").textContent="Não foi possível abrir a impressão. Tente de novo no navegador.";}
@@ -173,7 +192,9 @@ function mkPdf(act){
   },function(e){document.body.removeChild(w);throw e;});
 }
 document.getElementById("drv").onclick=function(){
-  var act=panels.querySelector(".panel.active"),m=document.getElementById("msg"),idv=act.querySelector(".ident").value;
+  var act=panels.querySelector(".panel.active"),m=document.getElementById("msg");
+  if(!act.querySelector(".ident")){m.textContent="Esta aba não gera documento.";return;}
+  var idv=act.querySelector(".ident").value;
   if(!idv){m.textContent="Selecione o Identificador antes de salvar no Drive.";return;}
   if(!DRIVE_URL){m.textContent="O endereço do Drive ainda não foi configurado no arquivo.";return;}
   if(!window.html2canvas||!window.jspdf){m.textContent="As bibliotecas de PDF não carregaram. Verifique a internet.";return;}
@@ -181,16 +202,50 @@ document.getElementById("drv").onclick=function(){
   stamp=p(d.getDate())+"-"+p(d.getMonth()+1)+"-"+d.getFullYear()+" "+p(d.getHours())+p(d.getMinutes());
   m.textContent="Gerando PDF e enviando para o Drive...";
   mkPdf(act).then(function(pdf){
-    return fetch(DRIVE_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({id:idv,nome:tit+" - "+idv+" - "+stamp+".pdf",pdf:pdf.output("datauristring").split(",")[1]})});
-  }).then(function(r){return r.json();}).then(function(j){
+    return api({acao:"salvar",id:idv,nome:tit+" - "+idv+" - "+stamp+".pdf",pdf:pdf.output("datauristring").split(",")[1]});
+  }).then(function(j){
     m.textContent=j.ok?"Salvo no Drive, pasta "+j.pasta+".":"Erro ao salvar: "+j.erro;
   }).catch(function(){m.textContent="Não foi possível confirmar o envio. Verifique a pasta no Drive e o endereço configurado.";});
 };
+function api(o){o.u=CRED.u;o.p=CRED.p;return fetch(DRIVE_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(o)}).then(function(r){return r.json();});}
+function unlock(){document.body.classList.remove("locked");document.getElementById("who").textContent=CRED.u;}
+document.getElementById("lgo").onclick=function(){
+  var lm=document.getElementById("lm");CRED={u:document.getElementById("lu").value.trim(),p:document.getElementById("lp").value};
+  lm.textContent="Verificando...";
+  api({acao:"login"}).then(function(j){
+    if(!j.ok){CRED=null;lm.textContent="Login ou senha inválidos.";return;}
+    try{sessionStorage.setItem("yuba_cred",JSON.stringify(CRED));}catch(e){}
+    lm.textContent="";unlock();
+  }).catch(function(){CRED=null;lm.textContent="Não foi possível conectar. Verifique a internet.";});
+};
+document.getElementById("out").onclick=function(){try{sessionStorage.removeItem("yuba_cred");}catch(e){}location.reload();};
+function lista(id){
+  var fb=document.getElementById("fb");fb.innerHTML='<p class="msg">Carregando...</p>';
+  api({acao:"listar",pasta:id}).then(function(j){
+    if(!j.ok){fb.innerHTML='<p class="msg">'+esc(j.erro)+'</p>';return;}
+    var h='<div class="crumb"><button data-r="1">Início</button>'+stack.map(function(x,i){return ' › <button data-i="'+i+'">'+esc(x.nome)+'</button>';}).join("")+'</div><div class="flist">';
+    j.pastas.forEach(function(f){h+='<button data-f="'+f.id+'" data-n="'+esc(f.nome)+'">📁 '+esc(f.nome)+'</button>';});
+    j.arquivos.forEach(function(f){h+='<button data-o="'+f.id+'">📄 '+esc(f.nome)+'<small>'+esc(f.data)+'</small></button>';});
+    if(!j.pastas.length&&!j.arquivos.length)h+='<p class="msg">Pasta vazia.</p>';
+    fb.innerHTML=h+'</div><p id="ob" class="msg"></p>';
+  }).catch(function(){fb.innerHTML='<p class="msg">Não foi possível carregar. Verifique a internet.</p>';});
+}
+function abrir(id){
+  var ob=document.getElementById("ob");ob.textContent="Abrindo...";
+  api({acao:"abrir",id:id}).then(function(j){
+    if(!j.ok){ob.textContent=j.erro;return;}
+    var bin=atob(j.pdf),a=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);
+    var url=URL.createObjectURL(new Blob([a],{type:"application/pdf"}));
+    ob.innerHTML='<a href="'+url+'" target="_blank" rel="noopener" download="'+esc(j.nome)+'">Toque para abrir: '+esc(j.nome)+'</a>';
+  }).catch(function(){ob.textContent="Não foi possível abrir o arquivo.";});
+}
 mk("Efetivos",BODY.ef,{init:["er"]});
 mk("Arsenal",BODY.ar);
 mk("Guarnição de Portão",BODY.gu,{init:["gr"]});
 mk("Relatórios",BODY.re,{init:["att"]});
+arqId=mk("Arquivos",'<div id="fb"></div>',{noid:1});
 show("p1");
+try{var sc=JSON.parse(sessionStorage.getItem("yuba_cred")||"null");if(sc){CRED=sc;api({acao:"login"}).then(function(j){if(j.ok)unlock();else CRED=null;}).catch(function(){CRED=null;});}}catch(e){}
 </script>
 </body>
 </html>
